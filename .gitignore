@@ -1,0 +1,10 @@
+RMaps.AppLib/.project
+RMaps.AppLib/bin/
+RMaps.AppLib/gen/
+RMaps.Ext/bin/
+RMaps.Ext/gen/
+RMaps.Free/bin/
+RMaps.Free/gen/
+RMaps.AppLib/.classpath
+RMaps.Ext/.classpath
+RMaps.Free/.classpath

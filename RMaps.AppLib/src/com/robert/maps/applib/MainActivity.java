@@ -57,6 +57,7 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Browser;
 import android.provider.SearchRecentSuggestions;
+import android.support.v7.app.ActionBarActivity;
 import android.util.DisplayMetrics;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -68,7 +69,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -87,7 +87,6 @@ import com.robert.maps.applib.kml.PoiActivity;
 import com.robert.maps.applib.kml.PoiListActivity;
 import com.robert.maps.applib.kml.PoiManager;
 import com.robert.maps.applib.kml.PoiPoint;
-import com.robert.maps.applib.kml.RouteListActivity;
 import com.robert.maps.applib.kml.Track;
 import com.robert.maps.applib.kml.TrackListActivity;
 import com.robert.maps.applib.kml.XMLparser.PredefMapsParser;
@@ -113,10 +112,16 @@ import com.robert.maps.applib.view.MapView;
 import com.robert.maps.applib.view.TileView;
 import com.robert.maps.applib.view.TileViewOverlay;
 
-public class MainActivity extends Activity {
+public class MainActivity extends ActionBarActivity {
 	private static final String MAPNAME = "MapName";
 	private static final String ACTION_SHOW_POINTS = "com.robert.maps.action.SHOW_POINTS";
 	
+	private static final int ACTIVITY_EDIT_POI = 1;
+	private static final int ACTIVITY_ADD_POI = 2;
+	private static final int ACTIVITY_POI_LIST = 3;
+	private static final int ACTIVITY_TRACKS = 4;
+	private static final int ACTIVITY_SETTINGS_ACTIVITY_CLOSED = 5;
+
 	private MapView mMap;
 	private ImageView ivAutoFollow;
 	private CompassView mCompassView;
@@ -168,15 +173,14 @@ public class MainActivity extends Activity {
         mTracker = GoogleAnalyticsTracker.getInstance();
         mTracker.startNewSession("UA-10715419-3", 20, this);
 
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
+//		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		
 		CreateContentView();
 		
 		mPoiManager = new PoiManager(this);
 		mLocationListener = new SampleLocationListener();
 		mMap.setMoveListener(mMoveListener);
-		//if(!OpenStreetMapViewConstants.DEBUGMODE) // эмулятор стал виснуть на след строчке
-			mOrientationSensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
+		mOrientationSensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
 
 		final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
  		SharedPreferences uiState = getPreferences(Activity.MODE_PRIVATE);
@@ -948,20 +952,24 @@ public class MainActivity extends Activity {
 			}
 			return true;
 		} else if (item.getItemId() == R.id.poilist) {
-			startActivityForResult((new Intent(this, PoiListActivity.class)).putExtra("lat", point.getLatitude()).putExtra("lon", point.getLongitude()).putExtra("title", "POI"), R.id.poilist);
+		    startActivityForResult((new Intent(this, PoiListActivity.class))
+		            .putExtra("lat", point.getLatitude())
+		            .putExtra("lon", point.getLongitude())
+		            .putExtra("title", "POI"),
+		            ACTIVITY_POI_LIST);
 			return true;
 		} else if (item.getItemId() == R.id.tracks) {
-			startActivityForResult(new Intent(this, TrackListActivity.class), R.id.tracks);
+			startActivityForResult(new Intent(this, TrackListActivity.class), ACTIVITY_TRACKS);
 			return true;
 		} else if (item.getItemId() == R.id.routes) {
 			//startActivityForResult(new Intent(this, RouteListActivity.class), R.id.routes);
-			startActivityForResult((new Intent(this, GeoDataActivity.class)), R.id.poilist);
+			startActivityForResult((new Intent(this, GeoDataActivity.class)), ACTIVITY_POI_LIST);
 			return true;
 		} else if (item.getItemId() == R.id.search) {
 			onSearchRequested();
 			return true;
 		} else if (item.getItemId() == R.id.settings) {
-			startActivityForResult(new Intent(this, MainPreferences.class), R.id.settings_activity_closed);
+			startActivityForResult(new Intent(this, MainPreferences.class), ACTIVITY_SETTINGS_ACTIVITY_CLOSED);
 			return true;
 		} else if (item.getItemId() == R.id.about) {
 			showDialog(R.id.about);
@@ -1295,10 +1303,10 @@ public class MainActivity extends Activity {
 						.putExtra("lat", info.EventGeoPoint.getLatitude())
 						.putExtra("lon", info.EventGeoPoint.getLongitude())
 						.putExtra("alt", info.Elevation)
-						.putExtra("title", "POI"), R.id.menu_addpoi);
+						.putExtra("title", "POI"), ACTIVITY_ADD_POI);
 			} else if (item.getItemId() == R.id.menu_editpoi) {
 				startActivityForResult((new Intent(this, PoiActivity.class)).putExtra("pointid", mMarkerIndex),
-						R.id.menu_editpoi);
+						ACTIVITY_EDIT_POI);
 				mMap.invalidate(); //postInvalidate();
 			} else if (item.getItemId() == R.id.menu_deletepoi) {
 				final int pointid = mPoiOverlay.getPoiPoint(mMarkerIndex).getId();
@@ -1363,7 +1371,7 @@ public class MainActivity extends Activity {
 				.setMessage(R.string.ya_dialog_message)
 				.setPositiveButton(R.string.ya_dialog_button_caption, new DialogInterface.OnClickListener() {
 						public void onClick(DialogInterface dialog, int whichButton) {
-							Browser.saveBookmark(MainActivity.this, "Мобильный Яндекс", "m.yandex.ru");
+							Browser.saveBookmark(MainActivity.this, "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ", "m.yandex.ru");
 						}
 				}).create();
 		} else if (id == R.id.whatsnew) {
@@ -1456,13 +1464,13 @@ public class MainActivity extends Activity {
 		}
 		return null;
 	}
-
+	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (requestCode == R.id.menu_editpoi || requestCode == R.id.menu_addpoi) {
+		if (requestCode == ACTIVITY_EDIT_POI || requestCode == ACTIVITY_ADD_POI) {
 			mPoiOverlay.UpdateList();
 			mMap.invalidate(); //postInvalidate();
-		} else if (requestCode == R.id.poilist) {
+		} else if (requestCode == ACTIVITY_POI_LIST) {
 			if(resultCode == RESULT_OK){
 				PoiPoint point = mPoiManager.getPoiPoint(data.getIntExtra("pointid", PoiPoint.EMPTY_ID()));
 				if(point != null){
@@ -1474,7 +1482,7 @@ public class MainActivity extends Activity {
 				mPoiOverlay.UpdateList();
 				mMap.invalidate(); //postInvalidate();
 			}
-		} else if (requestCode == R.id.tracks) {
+		} else if (requestCode == ACTIVITY_TRACKS) {
 			if(resultCode == RESULT_OK){
 				Track track = mPoiManager.getTrack(data.getIntExtra("trackid", PoiPoint.EMPTY_ID()));
 				if(track != null){
@@ -1482,7 +1490,7 @@ public class MainActivity extends Activity {
 					mMap.getController().setCenter(track.getBeginGeoPoint());
 				}
 			}
-		} else if (requestCode == R.id.settings_activity_closed) {
+		} else if (requestCode == ACTIVITY_SETTINGS_ACTIVITY_CLOSED) {
 			finish();
 			startActivity(new Intent(this, this.getClass()));
 		}
